@@ -23,5 +23,20 @@
     <canvas id="gameCanvas"></canvas>
     <script src="/socket.io/socket.io.js"></script>
     <script src="game.js"></script>
+
+    <button id="restartServer">Relancer le serveur</button>
+
+<!-- ... -->
+
+<script>
+  // ...
+
+  const restartButton = document.getElementById('restartServer');
+  restartButton.addEventListener('click', () => {
+    socket.emit('restartPartie');
+  });
+
+  // ...
+</script>
 </body>
 </html>

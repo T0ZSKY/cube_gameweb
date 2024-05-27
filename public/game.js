@@ -10,6 +10,8 @@ let player = { x: canvas.width / 2, y: canvas.height / 2, size: 20, color: getRa
 let players = {};
 let food = [];
 
+let playerDirection = { x: 0, y: 0 };
+
 function getRandomColor() {
     const letters = '0123456789ABCDEF';
     let color = '#';
@@ -24,7 +26,7 @@ function draw() {
 
     // Draw food
     food.forEach(f => {
-        ctx.fillStyle = 'red';
+        ctx.fillStyle = f.color;
         ctx.beginPath();
         ctx.arc(f.x, f.y, f.size / 2, 0, Math.PI * 2);
         ctx.fill();
@@ -34,20 +36,39 @@ function draw() {
     for (let id in players) {
         let p = players[id];
         ctx.fillStyle = p.color;
-        ctx.fillRect(p.x, p.y, p.size, p.size);
+        ctx.beginPath();
+        ctx.arc(p.x + p.size / 2, p.y + p.size / 2, p.size / 2, 0, Math.PI * 2);
+        ctx.fill();
     }
 
+    updatePlayerPosition();
     requestAnimationFrame(draw);
 }
 
-function updatePlayerPosition(e) {
+function updatePlayerPosition() {
     const speed = 5;
-    if (e.key === 'ArrowUp' && player.y > 0) player.y -= speed; // Empêcher de sortir en haut
-    if (e.key === 'ArrowDown' && player.y < canvas.height - player.size) player.y += speed; // Empêcher de sortir en bas
-    if (e.key === 'ArrowLeft' && player.x > 0) player.x -= speed; // Empêcher de sortir à gauche
-    if (e.key === 'ArrowRight' && player.x < canvas.width - player.size) player.x += speed; // Empêcher de sortir à droite
+    player.x += playerDirection.x * speed;
+    player.y += playerDirection.y * speed;
+
+    // Empêcher le personnage de sortir du canvas
+    if (player.x < 0) player.x = 0;
+    if (player.x > canvas.width - player.size) player.x = canvas.width - player.size;
+    if (player.y < 0) player.y = 0;
+    if (player.y > canvas.height - player.size) player.y = canvas.height - player.size;
+
     socket.emit('move', player);
 }
+
+document.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const angle = Math.atan2(mouseY - player.y, mouseX - player.x);
+    playerDirection = {
+        x: Math.cos(angle),
+        y: Math.sin(angle)
+    };
+});
 
 socket.on('state', (gameState) => {
     players = gameState.players;
@@ -60,13 +81,15 @@ socket.on('state', (gameState) => {
     }
 });
 
-socket.on('gameOver', () => {
-    alert('Game Over! You have been eaten.');
+socket.on('gameOver', (winnerId) => {
+    if (winnerId === socket.id) {
+        alert('Bravo, partie gagnée !');
+    } else {
+        alert('Perdu, meilleure chance next time !');
+    }
     player = { x: canvas.width / 2, y: canvas.height / 2, size: 20, color: getRandomColor() };
     socket.emit('newPlayer', player);
 });
-
-window.addEventListener('keydown', updatePlayerPosition);
 
 socket.emit('newPlayer', player);
 draw();
