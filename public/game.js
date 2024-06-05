@@ -24,6 +24,10 @@ function getRandomColor() {
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Centrer la caméra sur le joueur
+    ctx.save();
+    ctx.translate(canvas.width / 2 - player.x, canvas.height / 2 - player.y);
+
     // Draw food
     food.forEach(f => {
         ctx.fillStyle = f.color;
@@ -40,6 +44,8 @@ function draw() {
         ctx.arc(p.x + p.size / 2, p.y + p.size / 2, p.size / 2, 0, Math.PI * 2);
         ctx.fill();
     }
+
+    ctx.restore();
 
     updatePlayerPosition();
     requestAnimationFrame(draw);
@@ -68,6 +74,39 @@ document.addEventListener('mousemove', (e) => {
         x: Math.cos(angle),
         y: Math.sin(angle)
     };
+});
+
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowLeft') {
+        playerDirection.x = -1;
+        playerDirection.y = 0;
+        socket.emit('move', 'left');
+    } else if (event.key === 'ArrowRight') {
+        playerDirection.x = 1;
+        playerDirection.y = 0;
+        socket.emit('move', 'right');
+    } else if (event.key === ' ') {
+        playerDirection.x = 0;
+        playerDirection.y = -1;
+        socket.emit('jump');
+    }
+});
+
+// Détection des contrôles tactiles
+document.getElementById('left').addEventListener('touchstart', () => {
+    playerDirection.x = -1;
+    playerDirection.y = 0;
+    socket.emit('move', 'left');
+});
+document.getElementById('right').addEventListener('touchstart', () => {
+    playerDirection.x = 1;
+    playerDirection.y = 0;
+    socket.emit('move', 'right');
+});
+document.getElementById('jump').addEventListener('touchstart', () => {
+    playerDirection.x = 0;
+    playerDirection.y = -1;
+    socket.emit('jump');
 });
 
 socket.on('state', (gameState) => {

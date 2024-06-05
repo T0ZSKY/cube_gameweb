@@ -17,26 +17,54 @@
         canvas {
             border: 1px solid black;
         }
+        .mobile-controls {
+            position: fixed;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            display: none; /* Par défaut caché sur desktop */
+        }
+        .mobile-controls button {
+            margin: 5px;
+            padding: 10px;
+            font-size: 20px;
+        }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas"></canvas>
+    <div class="mobile-controls">
+        <button id="left">←</button>
+        <button id="jump">↑</button>
+        <button id="right">→</button>
+    </div>
     <script src="/socket.io/socket.io.js"></script>
     <script src="game.js"></script>
 
     <button id="restartServer">Relancer le serveur</button>
 
-<!-- ... -->
+    <script>
+        const socket = io();
+        const restartButton = document.getElementById('restartServer');
+        restartButton.addEventListener('click', () => {
+            socket.emit('restartPartie');
+        });
 
-<script>
-  // ...
+        // Détection de l'appareil pour afficher les contrôles mobiles
+        if (/Mobi|Android/i.test(navigator.userAgent)) {
+            document.querySelector('.mobile-controls').style.display = 'block';
+        }
 
-  const restartButton = document.getElementById('restartServer');
-  restartButton.addEventListener('click', () => {
-    socket.emit('restartPartie');
-  });
-
-  // ...
-</script>
+        // Contrôles tactiles
+        document.getElementById('left').addEventListener('touchstart', () => {
+            socket.emit('move', 'left');
+        });
+        document.getElementById('right').addEventListener('touchstart', () => {
+            socket.emit('move', 'right');
+        });
+        document.getElementById('jump').addEventListener('touchstart', () => {
+            socket.emit('jump');
+        });
+    </script>
 </body>
 </html>
